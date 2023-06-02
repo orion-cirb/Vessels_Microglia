@@ -25,16 +25,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.ArrayList;
 import java.util.Date;
-import loci.common.Region;
 import loci.common.services.ServiceFactory;
 import loci.formats.meta.IMetadata;
 import loci.formats.services.OMEXMLService;
-import loci.plugins.BF;
-import loci.plugins.in.ImporterOptions;
 import loci.plugins.util.ImageProcessorReader;
-import mcib3d.geom2.Object3DInt;
 import mcib3d.geom2.Objects3DIntPopulation;
-import mcib3d.image3d.ImageHandler;
 import org.apache.commons.io.FilenameUtils;
 
 
@@ -98,7 +93,7 @@ public class Vessels_Microglia implements PlugIn {
             // Write headers results for results files
             FileWriter results = new FileWriter(outDirResults + "Results.xls", false);
             BufferedWriter outPutResults = new BufferedWriter(results);
-            outPutResults.write("ImageName\tRoi name\t#Microglia cell\tcell volume (µm3)\tCell distance to vessel (µm)\tVessel diameter (µm)\tVessel volume (µm3)"
+            outPutResults.write("ImageName\tRoi name\t#Microglia cell\tCell volume (µm3)\tCell volume coloc with vessel(µm3)\tCell distance to vessel (µm)\tVessel diameter (µm)\tVessel volume (µm3)"
                     + "\tTotal vessel length (µm)\tMean length (µm)\tLength longest Branch (µm)\tNb branches\tNb junctions\tnb endpoints\tVessel mean diameter (µm)\n");
             outPutResults.flush();
            
@@ -144,6 +139,7 @@ public class Vessels_Microglia implements PlugIn {
                 RoiManager rm = new RoiManager(false);
                 rm.runCommand("Open", roiFileName);
                 ImagePlus[] imgs = {null, null};
+               
                 for (Roi roi : rm.getRoisAsArray()) {
                     String roiName = roi.getName();
                     // Compute parameters

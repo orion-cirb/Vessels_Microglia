@@ -6,12 +6,7 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.Prefs;
 import ij.gui.Roi;
-import ij.gui.WaitForUserDialog;
-import ij.io.FileSaver;
-import ij.io.Opener;
 import ij.measure.Calibration;
-import ij.plugin.RGBStackMerge;
-import ij.plugin.frame.RoiManager;
 import ij.util.ThreadUtil;
 import java.awt.Color;
 import java.awt.Font;
@@ -21,10 +16,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.IntStream;
 import javax.swing.ImageIcon;
-import loci.common.Region;
 import loci.common.services.DependencyException;
 import loci.common.services.ServiceException;
 import loci.formats.FormatException;
@@ -37,6 +30,7 @@ import mcib3d.geom.Point3D;
 import mcib3d.geom2.Object3DInt;
 import mcib3d.geom2.Objects3DIntPopulation;
 import mcib3d.geom2.VoxelInt;
+import mcib3d.geom2.measurements.Measure2Colocalisation;
 import mcib3d.geom2.measurements.Measure2Distance;
 import mcib3d.geom2.measurements.MeasureVolume;
 import mcib3d.geom2.measurements.MeasureCentroid;
@@ -541,6 +535,15 @@ public class Weka_Tools {
         microPop.resetLabels();
         return(microPop);
      }
+     
+     /*
+     Get coloc volume of microglial cell and vessel 
+     */
+     private double getColocVol(Object3DInt microObj, Object3DInt vessel) {
+         Measure2Colocalisation coloc = new Measure2Colocalisation(microObj, vessel);
+        double colVol = coloc.getValue(Measure2Colocalisation.COLOC_VOLUME);
+         return(colVol);
+     }
    
     /** compute parameters and save images objects 
      * 
@@ -582,12 +585,13 @@ public class Weka_Tools {
             double dist = vesselimgMapInv.getPixel(pt);
             VoxelInt voxelBorder = new Measure2Distance(microObj, vesselsSkelObj).getBorder2Pix();
             double radius = vesselimgMap.getPixel(voxelBorder);
+            double microColocVol = getColocVol(microObj, vesselRoiObj);
             if (index == 0)
-                outPutResults.write(rootName+"\t"+roiName+"\t"+microObj.getLabel()+"\t"+microVol+"\t"+dist+"\t"+radius+"\t"+vesselsVol+"\t"+
+                outPutResults.write(rootName+"\t"+roiName+"\t"+microObj.getLabel()+"\t"+microVol+"\t"+microColocVol+"\t"+dist+"\t"+radius+"\t"+vesselsVol+"\t"+
                     skelParams.get("totalLength")+"\t"+skelParams.get("meanLength")+"\t"+skelParams.get("lengthLongestBranch")+"\t"+
                     skelParams.get("nbBranches")+"\t"+skelParams.get("nbJunctions")+"\t"+skelParams.get("nbEndpoints")+"\t"+skelParams.get("meanDiameter")+"\n");
             else
-                outPutResults.write("\t\t"+microObj.getLabel()+"\t"+microVol+"\t"+dist+"\t"+radius+"\t\t\t\t\t\t\t\t\n");
+                outPutResults.write("\t\t"+microObj.getLabel()+"\t"+microVol+"\t"+microColocVol+"\t"+dist+"\t"+radius+"\t\t\t\t\t\t\t\t\n");
             outPutResults.flush();  
             index++;
         }
