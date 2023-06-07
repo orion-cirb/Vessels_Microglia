@@ -1,9 +1,9 @@
 # Vessels_Microglia
 
-**Developed for:** Nicolas
-**Team:** Garel
-**Date:** May 2023
-**Software:** Fiji
+* **Developed for:** Nicolas
+* **Team:** Garel
+* **Date:** May 2023
+* **Software:** Fiji
 
 ### Images description
 
