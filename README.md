@@ -28,7 +28,6 @@ With each image should be provided *.zip* file containing one or multiple ROI(s)
 ### Dependencies
 
 * **3DImageSuite** Fiji plugin
-
 * **Weka pixel classifier** + *vessels.model* and *microglia.model* models 
 
 ### Version history
