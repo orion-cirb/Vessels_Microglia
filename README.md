@@ -2,7 +2,7 @@
 
 * **Developed for:** Nicolas
 * **Team:** Garel
-* **Date:** May 2023
+* **Date:** June 2023
 * **Software:** Fiji
 
 ### Images description
@@ -22,8 +22,8 @@ With each image should be provided *.zip* file containing one or multiple ROI(s)
 * Normalize images with quantile-based normalization
 * Detect vessels with Weka + Huang thresholding + median filtering
 * Detect microglia cells with Weka
-* Compute distance between microglia cells and their nearest vessel
-* compute nb branches, end points, junctions, mean diameter for vessels etc ...
+* Compute distance between each microglia cell and its nearest vessel
+* Compute vessels mean diameter and number of branches, end points, junctions, etc
 
 ### Dependencies
 
@@ -33,4 +33,4 @@ With each image should be provided *.zip* file containing one or multiple ROI(s)
 
 ### Version history
 
-Version 1 released on May 25, 2023.
+Version 1 released on June 2, 2023.
