@@ -9,7 +9,7 @@
 
 3D images taken with a x60 objective
 
-2 channels:
+4 channels:
   1. Vessels
   2. Endothelial cells
   3. Microglia cells
