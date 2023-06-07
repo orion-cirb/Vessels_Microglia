@@ -10,10 +10,10 @@
 3D images taken with a x60 objective
 
 4 channels:
-  1. Vessels
-  2. Endothelial cells
-  3. Microglia cells
-  4. Nuclei
+  1. IB4/lectine vessels
+  2. ERG endothelial cells
+  3. IB1 microglia cells
+  4. DAPI nuclei
 
 With each image should be provided *.zip* file containing one or multiple ROI(s).
 
