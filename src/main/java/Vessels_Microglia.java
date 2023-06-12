@@ -24,7 +24,9 @@ import java.text.SimpleDateFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import loci.common.services.ServiceFactory;
 import loci.formats.meta.IMetadata;
 import loci.formats.services.OMEXMLService;
@@ -114,15 +116,19 @@ public class Vessels_Microglia implements PlugIn {
             }
                     
             // Do Weka on all files
-            IJ.setForegroundColor(0, 0, 0);
-            IJ.setBackgroundColor(255, 255, 255);
+            IJ.setForegroundColor(255, 255, 255);
+            IJ.setBackgroundColor(0, 0, 0);
 
             System.out.println("Segmentations ...");
             
             for (String f : imageFiles) {
                 String rootName = FilenameUtils.getBaseName(f);
                 String fileName = processDir+rootName+"-Vessels-normalized.tif"; 
-                String roiFileName = imageDir+rootName+".zip";
+                String roiFileName = null;
+                if (new File(imageDir+rootName+".zip").exists())
+                    roiFileName = imageDir+rootName+".zip";
+                else if (new File(imageDir+rootName+".roi").exists())
+                    roiFileName = imageDir+rootName+".roi";
                 reader.setId(fileName);
                 ImagePlus imgVessels = IJ.openImage(fileName);
                 fileName = processDir+rootName+"-Micro-normalized.tif"; 
@@ -133,19 +139,26 @@ public class Vessels_Microglia implements PlugIn {
                 Objects3DIntPopulation vesselPop = tools.goWeka(imgVessels, model);
                 //do microglia segmentation
                 model = tools.modelMicro;
-                System.out.println("Micro segmentation starting image " + rootName + " ...");
+                System.out.println("Microglia segmentation starting image " + rootName + " ...");
                 Objects3DIntPopulation microPop = tools.goWeka(imgMicro, model);
                 // Load Roi
-                RoiManager rm = new RoiManager(false);
-                rm.runCommand("Open", roiFileName);
+                List<Roi> rois = new ArrayList();
+                if (roiFileName == null) {
+                    Roi roi = new Roi(0, 0, imgVessels.getWidth() - 1 , imgVessels.getHeight() - 1);
+                    rois.add(roi);
+                }
+                else {
+                    RoiManager rm = new RoiManager(false);
+                    rm.runCommand("Open", roiFileName);
+                    rois = Arrays.asList(rm.getRoisAsArray());
+                }
                 ImagePlus[] imgs = {null, null};
                
-                for (Roi roi : rm.getRoisAsArray()) {
-                    String roiName = roi.getName();
+                for (Roi roi : rois) {
                     // Compute parameters
                     System.out.println("computing parameters ...");
-                    imgs = tools.compute_param(vesselPop, microPop, roi, imgVessels, imgMicro, imgs, roiName, rootName, outDirResults, outPutResults);
-                }   
+                    imgs = tools.compute_param(vesselPop, microPop, roi, imgVessels, imgMicro, imgs, rootName, outDirResults, outPutResults);
+                } 
                 ImagePlus[] imgColors = {imgs[0], imgs[1], null, imgVessels, imgMicro};
                 ImagePlus imgObjects = new RGBStackMerge().mergeHyperstacks(imgColors, true);
                 imgObjects.setCalibration(tools.cal);

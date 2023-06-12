@@ -6,6 +6,7 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.Prefs;
 import ij.gui.Roi;
+import ij.gui.WaitForUserDialog;
 import ij.measure.Calibration;
 import ij.util.ThreadUtil;
 import java.awt.Color;
@@ -161,11 +162,11 @@ public class Weka_Tools {
         }
         for (String f : files) {
             String name = FilenameUtils.getBaseName(f);
-            if (model.equals("vessels") && name.equals("vessels")) {
+            if (model.equals("vessel") && name.equals("vessel")) {
                 modelFile = f;
                 break;
             }
-            if (model.equals("micro") && name.equals("microglia")) {
+            if (model.equals("microglia") && name.equals("microglia")) {
                 modelFile = f;
                 break;
             }
@@ -179,8 +180,8 @@ public class Weka_Tools {
      */
     public String[] dialog(String imagesDir, String[] channels) {
         String[] chNames = {"Vessels : ", "Microglia : "};
-        modelVessel = findWekaModel(imagesDir, "vessels");
-        modelMicro = findWekaModel(imagesDir, "micro");
+        modelVessel = findWekaModel(imagesDir, "vessel");
+        modelMicro = findWekaModel(imagesDir, "microglia");
         GenericDialogPlus gd = new GenericDialogPlus("Parameters");
         gd.setInsets​(0, 15, 0);
         gd.addImage(icon);
@@ -189,11 +190,9 @@ public class Weka_Tools {
         for (int n = 0; n < chNames.length; n++) {
             gd.addChoice(chNames[n], channels, channels[n]);
         }
-        if (modelVessel.isEmpty() || modelMicro.isEmpty()) {
-            gd.addMessage("Models for vessels and microglia detections", Font.getFont("Monospace"), Color.blue);
-            gd.addFileField("Model for vessels", imagesDir);
-            gd.addFileField("Model for microglia", imagesDir);
-        }
+        gd.addMessage("Models for vessels and microglia detections", Font.getFont("Monospace"), Color.blue);
+        gd.addFileField("Model for vessels", modelVessel);
+        gd.addFileField("Model for microglia", modelMicro);
         gd.addMessage("Size filter", Font.getFont("Monospace"), Color.blue);
         gd.addNumericField("Min vessels size (µm3) : ", minVessels, 2);
         gd.addNumericField("Min microglia size (µm3) : ", minMicro, 2);
@@ -446,10 +445,10 @@ public class Weka_Tools {
         imgRes = weka.getClassifiedImage();
         // free memory
         weka = null;
-        IJ.setAutoThreshold(imgRes, "Huang dark");
+        IJ.setAutoThreshold(imgRes, "Huang");
         Prefs.blackBackground = false;
-        IJ.run(imgRes, "Convert to Mask", "method=Huang background=Dark");
-       
+        IJ.run(imgRes, "Convert to Mask", "method=Huang background=Light");
+
         // remove small objects
         median3D_filter(imgRes, 4, 4);
         imgRes.setCalibration(cal);
@@ -510,8 +509,6 @@ public class Weka_Tools {
         // take only inside roi
         ImagePlus imgMask = imhVessels.getImagePlus();
         imgMask.setRoi(roi);
-        IJ.setBackgroundColor(0, 0, 0);
-        IJ.setForegroundColor(255, 255, 255);
         IJ.run(imgMask, "Clear Outside", "stack");
         imgMask.deleteRoi();
         Object3DInt vesselObj = new Object3DInt(ImageHandler.wrap(imgMask)); 
@@ -527,8 +524,6 @@ public class Weka_Tools {
         // take only inside roi
         ImagePlus imgMask = imhVessels.getImagePlus();
         imgMask.setRoi(roi);
-        IJ.setBackgroundColor(0, 0, 0);
-        IJ.setForegroundColor(255, 255, 255);
         IJ.run(imgMask, "Clear Outside", "stack");
         imgMask.deleteRoi();
         Objects3DIntPopulation microPop = getPopFromImage(imgMask); 
@@ -559,7 +554,7 @@ public class Weka_Tools {
      * @throws java.io.IOException 
      */
     public ImagePlus[] compute_param(Objects3DIntPopulation vesselsPop, Objects3DIntPopulation microPop, Roi roi,
-            ImagePlus imgVessels, ImagePlus imgMicro, ImagePlus[] imgs, String roiName, String rootName, String outDir,
+            ImagePlus imgVessels, ImagePlus imgMicro, ImagePlus[] imgs, String rootName, String outDir,
              BufferedWriter outPutResults) throws IOException {
         // get vessels pop as one 3D Object in roi
         Object3DInt vesselRoiObj = removeObjOutsideRoi(vesselsPop, imgVessels, roi);
@@ -571,13 +566,13 @@ public class Weka_Tools {
         imhMap.closeImagePlus();
         ImageFloat vesselimgMap = localThickness3D(imgMask, false);
         ImageFloat vesselimgMapInv = localThickness3D(imgMask, true);
-        System.out.println("compute vessels skeleton "+roiName+" ...");
+        System.out.println("compute vessels skeleton "+roi.getName()+" ...");
         ImagePlus vesselsSkelImg = skeletonize3D(imgMask);
         Object3DInt vesselsSkelObj = new Object3DInt(ImageHandler.wrap(imgMask));
         closeImages(imgMask);
         HashMap skelParams = skeletonParameters(vesselsSkelImg, vesselimgMap.getImagePlus());
         // get microglia pop in roi
-        Objects3DIntPopulation microRoiPop = removePopOutsideRoi(microPop, imgVessels, roi);  
+        Objects3DIntPopulation microRoiPop = removePopOutsideRoi(microPop, imgMicro, roi);  
         int index = 0;
         for (Object3DInt microObj : microRoiPop.getObjects3DInt()) {
             double microVol = new MeasureVolume(microObj).getVolumeUnit();
@@ -587,7 +582,7 @@ public class Weka_Tools {
             double radius = vesselimgMap.getPixel(voxelBorder);
             double microColocVol = getColocVol(microObj, vesselRoiObj);
             if (index == 0)
-                outPutResults.write(rootName+"\t"+roiName+"\t"+microObj.getLabel()+"\t"+microVol+"\t"+microColocVol+"\t"+dist+"\t"+radius+"\t"+vesselsVol+"\t"+
+                outPutResults.write(rootName+"\t"+roi.getName()+"\t"+microObj.getLabel()+"\t"+microVol+"\t"+microColocVol+"\t"+dist+"\t"+radius+"\t"+vesselsVol+"\t"+
                     skelParams.get("totalLength")+"\t"+skelParams.get("meanLength")+"\t"+skelParams.get("lengthLongestBranch")+"\t"+
                     skelParams.get("nbBranches")+"\t"+skelParams.get("nbJunctions")+"\t"+skelParams.get("nbEndpoints")+"\t"+skelParams.get("meanDiameter")+"\n");
             else
