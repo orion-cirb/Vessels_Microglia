@@ -95,7 +95,7 @@ public class Vessels_Microglia implements PlugIn {
             // Write headers results for results files
             FileWriter results = new FileWriter(outDirResults + "Results.xls", false);
             BufferedWriter outPutResults = new BufferedWriter(results);
-            outPutResults.write("ImageName\tRoi name\t#Microglia cell\tCell volume (µm3)\tCell volume coloc with vessel(µm3)\tCell distance to vessel (µm)\tVessel diameter (µm)\tVessel volume (µm3)"
+            outPutResults.write("ImageName\tRoi name\t#Microglia cell\tCell volume (µm3)\tCell volume coloc with vessel(µm3)\tCentroid cell distance to vessel (µm)\tBorder cell distance to vessel (µm)\tVessel diameter (µm)\tVessel volume (µm3)"
                     + "\tTotal vessel length (µm)\tMean length (µm)\tLength longest Branch (µm)\tNb branches\tNb junctions\tnb endpoints\tVessel mean diameter (µm)\n");
             outPutResults.flush();
            

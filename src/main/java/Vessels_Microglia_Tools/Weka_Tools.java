@@ -6,7 +6,6 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.Prefs;
 import ij.gui.Roi;
-import ij.gui.WaitForUserDialog;
 import ij.measure.Calibration;
 import ij.util.ThreadUtil;
 import java.awt.Color;
@@ -577,16 +576,17 @@ public class Weka_Tools {
         for (Object3DInt microObj : microRoiPop.getObjects3DInt()) {
             double microVol = new MeasureVolume(microObj).getVolumeUnit();
             Point3D pt = new MeasureCentroid​(microObj).getCentroidAsPoint();
-            double dist = vesselimgMapInv.getPixel(pt);
+            double CenterDist = vesselimgMapInv.getPixel(pt);
+            double BorderDist = new Measure2Distance(microObj, vesselRoiObj).getValue(Measure2Distance.DIST_BB_UNIT);
             VoxelInt voxelBorder = new Measure2Distance(microObj, vesselsSkelObj).getBorder2Pix();
             double radius = vesselimgMap.getPixel(voxelBorder);
             double microColocVol = getColocVol(microObj, vesselRoiObj);
             if (index == 0)
-                outPutResults.write(rootName+"\t"+roi.getName()+"\t"+microObj.getLabel()+"\t"+microVol+"\t"+microColocVol+"\t"+dist+"\t"+radius+"\t"+vesselsVol+"\t"+
+                outPutResults.write(rootName+"\t"+roi.getName()+"\t"+microObj.getLabel()+"\t"+microVol+"\t"+microColocVol+"\t"+CenterDist+"\t"+BorderDist+"\t"+radius+"\t"+vesselsVol+"\t"+
                     skelParams.get("totalLength")+"\t"+skelParams.get("meanLength")+"\t"+skelParams.get("lengthLongestBranch")+"\t"+
                     skelParams.get("nbBranches")+"\t"+skelParams.get("nbJunctions")+"\t"+skelParams.get("nbEndpoints")+"\t"+skelParams.get("meanDiameter")+"\n");
             else
-                outPutResults.write("\t\t"+microObj.getLabel()+"\t"+microVol+"\t"+microColocVol+"\t"+dist+"\t"+radius+"\t\t\t\t\t\t\t\t\n");
+                outPutResults.write("\t\t"+microObj.getLabel()+"\t"+microVol+"\t"+microColocVol+"\t"+CenterDist+"\t"+BorderDist+"\t"+radius+"\t\t\t\t\t\t\t\t\n");
             outPutResults.flush();  
             index++;
         }
